@@ -1,5 +1,6 @@
 
-import { Box, Button, CircularProgress } from "@mui/material";
+import styled from "@emotion/styled";
+import { Box, Button, CircularProgress, TableCell } from "@mui/material";
 import { blue, cyan } from "@mui/material/colors";
 import axios from "axios";
 import { useRef, useState } from "react";
@@ -11,7 +12,7 @@ export const get_vehicle_model = async () => {
       Accept: 'application/json',
     }
   });
-  return res;
+  return res.data.data["/**"]["ros__parameters"];
 }
 
 export const save_vehicle_model = async (vehicle_data) => {
@@ -44,6 +45,50 @@ export const update_config_data = async (config) => {
   });
 }
 
+
+export const get_calib_param = async () => {
+  const response = await axios.get('/api/sensor_kit', {
+    headers: {
+      "Content-Type": 'application/json',
+      Accept: 'application/json',
+    }
+  });
+
+  const base_link = (response.data.sensors_calib.data["base_link"]);
+  const base_link_child = Object.keys(base_link).map((ele, idx) => {
+    return {
+      frame_id: ele,
+      transform: base_link[ele],
+      view: true,
+      view_all: true
+    }
+  });
+  const sensor_kit_base_link = (response.data.sensor_kit_calib.data["sensor_kit_base_link"]);
+  const sensor_kit_base_link_child = Object.keys(sensor_kit_base_link).map((ele, idx) => {
+    return {
+      frame_id: ele,
+      transform: sensor_kit_base_link[ele],
+      view: true
+    }
+  })
+  const sensor_link_map = base_link_child.map((ele, idx) => {
+    if (ele.frame_id === "sensor_kit_base_link") {
+      return {
+        ...ele,
+        children: sensor_kit_base_link_child
+      }
+    }
+    return ele;
+  })
+  return sensor_link_map;
+}
+
+export const save_calib_param = async (calib) => {
+  const response = await axios.post('/api/sensor_kit', {
+    calib
+  });
+
+}
 
 export const LoadingActionButton = ({ async_fun, title }) => {
 
@@ -92,3 +137,8 @@ export const LoadingActionButton = ({ async_fun, title }) => {
     </Box>
   </>);
 }
+
+
+export const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  backgroundColor: '#ddd',
+}));

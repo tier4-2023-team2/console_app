@@ -11,6 +11,27 @@ import { useEffect } from "react";
 import { useLoader } from '@react-three/fiber';
 import { ColladaLoader } from 'three/examples/jsm/loaders/ColladaLoader';
 
+export const BASE_LINK_TRANSFORM = {
+  x: 0,
+  y: 0,
+  z: 0,
+  roll: 0,
+  pitch: 0,
+  yaw: 0,
+}
+
+export const DEFAULT_POSE = {
+  frame_id: "base_link",
+  transform: {
+    x: 0,
+    y: 0,
+    z: 0,
+    roll: 0,
+    pitch: 0,
+    yaw: 0,
+  }
+}
+
 export const AxisHelper = ({ color, direction, length }) => {
   const { scene } = useThree();
 
@@ -413,7 +434,6 @@ export function QuatanionPoseForm({ transform, parents }) {
     qua.setFromRotationMatrix(list[child_idx].matrixWorld);
     let euler = new THREE.Euler();
     euler.setFromQuaternion(qua, 'XYZ');
-    // console.log(pos, qua)
     const transformMatrix = new THREE.Matrix4();
     let pos2 = new THREE.Vector3(pos.x, pos.y, pos.z);
     let qua2 = new THREE.Quaternion(qua._x, qua._y, qua._z, qua._w);

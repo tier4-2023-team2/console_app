@@ -9,7 +9,7 @@ export default function Appbar() {
         <Link
           href="/#"
           className="flex h-16 w-20 items-center justify-center bg-cyan-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-600">
-          B-viz
+          Q-viz
         </Link>
       </div>
     </header>

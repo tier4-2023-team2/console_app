@@ -9,18 +9,16 @@ import TableRow from '@mui/material/TableRow';
 
 import { LoadingActionButton, get_vehicle_model, save_vehicle_model } from '~/common/util';
 import { useEffect, useState } from 'react';
-import { Card, TextField, Typography, styled } from '@mui/material';
+import { Card, Paper, TextField, Typography, styled } from '@mui/material';
 import VehicleModelView from '~/components/vehicle_model_view';
 
-const StyledTableCell = styled(TableCell)(({ theme }) => ({
-  backgroundColor: '#eee',
-}));
+import { StyledTableCell } from '~/common/util';
 export default function Page() {
 
   const [vehicle_data, set_vehicle_data] = useState({});
   const init = async () => {
-    const response = await get_vehicle_model();
-    set_vehicle_data(response.data.data["/**"]["ros__parameters"]);
+    const res = await get_vehicle_model();
+    set_vehicle_data(res);
   }
 
   const save = async () => {
@@ -34,7 +32,7 @@ export default function Page() {
     <div className="flex flex-row w-full h-full gap-4">
       <div className="sm:basis-1/3 w-96 h-full min-w-[400px] ">
         <Card sx={{ p: 4, mt: 2, ml: 2 }}>
-          <TableContainer className='h-[620px]'>
+          <TableContainer className='h-[620px]' component={Paper}>
             <Table stickyHeader>
               <TableHead>
                 <TableRow>

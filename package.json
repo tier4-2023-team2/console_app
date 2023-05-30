@@ -14,7 +14,7 @@
     "@headlessui/react": "^1.7.14",
     "@heroicons/react": "^2.0.18",
     "@mui/icons-material": "^5.11.16",
-    "@mui/material": "^5.13.0",
+    "@mui/material": "^5.13.3",
     "@react-three/drei": "^9.70.0",
     "@react-three/fiber": "^8.13.0",
     "@tailwindcss/container-queries": "^0.1.1",
