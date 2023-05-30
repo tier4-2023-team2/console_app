@@ -4,13 +4,14 @@ import {
   VariableIcon,
   TruckIcon
 } from '@heroicons/react/24/outline'
+import ShareIcon from '@mui/icons-material/Share';
 import Link from 'next/link';
 import { useSelectedLayoutSegment } from 'next/navigation';
 
 const sidebarNavigation = [
   { name: 'System', href: '/config', icon: WrenchScrewdriverIcon, match: "config" },
   { name: 'Vehicle', href: '/vehicle', icon: TruckIcon, match: "vehicle" },
-  { name: 'Tree', href: '/tree', icon: VariableIcon, match: "tree" },
+  { name: 'Tree', href: '/tree', icon: ShareIcon, match: "tree" },
 ]
 
 function classNames(...classes) {

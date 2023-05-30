@@ -6,19 +6,25 @@ import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
 
-import { get_vehicle_model } from '~/common/util';
+import { LoadingActionButton, get_vehicle_model, save_vehicle_model } from '~/common/util';
 import { useEffect, useState } from 'react';
-import { Box, Button, TextField, Typography } from '@mui/material';
+import { TextField, Typography, styled } from '@mui/material';
 import VehicleModelView from '~/components/vehicle_model_view';
 
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  backgroundColor: '#eee',
+}));
 export default function Page() {
 
   const [vehicle_data, set_vehicle_data] = useState({});
   const init = async () => {
     const response = await get_vehicle_model();
     set_vehicle_data(response.data.data["/**"]["ros__parameters"]);
+  }
+
+  const save = async () => {
+    const response = await save_vehicle_model(vehicle_data);
   }
 
   useEffect(() => {
@@ -31,14 +37,14 @@ export default function Page() {
           <Table stickyHeader>
             <TableHead>
               <TableRow>
-                <TableCell><Typography>ParamName</Typography></TableCell>
-                <TableCell><Typography>Value</Typography></TableCell>
+                <StyledTableCell><Typography>ParamName</Typography></StyledTableCell>
+                <StyledTableCell><Typography>Value</Typography></StyledTableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {Object.keys(vehicle_data).map((ele, idx) => {
                 return (
-                  <TableRow key={`key_${idx}`} >
+                  <TableRow hover key={`key_${idx}`} >
                     <TableCell sx={{ py: 1, width: 150 }}>
                       <Typography>{ele}</Typography>
                     </TableCell>
@@ -84,8 +90,7 @@ export default function Page() {
           </Table>
         </TableContainer>
         <div className='w-full flex h-8 justify-end pr-4'>
-          <Button variant='outlined' className='w-24'>apply</Button>
-          <Button variant='outlined' className='w-24'>save</Button>
+          <LoadingActionButton async_fun={save} title={"SAVE"} />
         </div>
       </div>
       <div className="sm:basis-2/3 w-96 overflow-hidden">
