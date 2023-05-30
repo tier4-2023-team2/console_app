@@ -1,17 +1,15 @@
 "use client";
 
-import { LoadingActionButton, get_calib_param, get_vehicle_model, save_calib_param, save_vehicle_model } from '~/common/util';
+import {
+  get_calib_param, get_vehicle_model, save_calib_param, save_vehicle_model
+} from '~/common/util';
 import { useEffect, useState } from 'react';
 import { Box, Button, Card, Checkbox, Collapse, IconButton, Paper, TextField, Typography, styled } from '@mui/material';
 import VehicleModelView, { QuatanionPoseForm, DEFAULT_POSE, MyAxes, Vehicle, Ground, Sensor, BASE_LINK_TRANSFORM } from '~/components/vehicle_model_view';
 
-import { StyledTableCell } from '~/common/util';
-
 import KeyboardArrowDownOutlinedIcon from '@mui/icons-material/KeyboardArrowDownOutlined';
 import KeyboardArrowUpOutlinedIcon from '@mui/icons-material/KeyboardArrowUpOutlined';
-import { CheckBox } from '@mui/icons-material';
 import { Disclosure } from '@headlessui/react';
-import { MinusSmallIcon, PlusSmallIcon } from '@heroicons/react/24/outline'
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 
@@ -44,7 +42,54 @@ export default function Page() {
   const save = async () => {
     const response = await save_calib_param(calib);
   }
-  const link_update_handler = () => {
+  const link_update_handler = (new_form, select_link) => {
+    const idx_i = select_link.idx_i;
+    const idx_j = select_link.idx_j;
+    if (idx_j === undefined) {
+      const new_link = calib.map((ele, i) => {
+        if (i === idx_i) {
+          return {
+            ...ele,
+            transform: new_form
+          }
+        }
+        return ele;
+      })
+      set_calib(new_link);
+      set_select_link({
+        ...select_link,
+        tgt_frame: new_link.find((ele, idx) => {
+          return idx === idx_i;
+        }),
+      });
+    } else {
+      const new_link = calib.map((ele, i) => {
+        if (i === idx_i) {
+          return {
+            ...ele,
+            children: ele.children.map((ele2, j) => {
+              if (j === idx_j) {
+                return {
+                  ...ele2,
+                  transform: new_form
+                }
+              }
+              return ele2;
+            })
+          }
+        }
+        return ele;
+      });
+      set_calib(new_link);
+      set_select_link({
+        ...select_link,
+        tgt_frame: new_link.find((ele, idx) => {
+          return idx === idx_i;
+        }).children.find((ele, idx) => {
+          return idx === idx_j;
+        }),
+      });
+    }
 
   }
 
@@ -128,16 +173,16 @@ export default function Page() {
       })
       if (valid) {
         const new_form = {
-          x: form.x,
-          y: form.y,
-          z: form.z,
-          roll: form.roll,
-          pitch: form.pitch,
-          yaw: form.yaw,
+          x: parseFloat(form.x),
+          y: parseFloat(form.y),
+          z: parseFloat(form.z),
+          roll: parseFloat(form.roll),
+          pitch: parseFloat(form.pitch),
+          yaw: parseFloat(form.yaw),
         };
         set_form(new_form)
         set_transform2(new_form);
-        // update_handler(new_form, frame_id, parents);
+        update_handler(new_form, select_link);
       }
     }
 
@@ -225,6 +270,11 @@ export default function Page() {
     <div className="flex flex-row w-full h-full gap-4">
       <div className="sm:basis-1/2 w-96 h-full min-w-[400px] ">
         <Card sx={{ p: 2, mb: 2, mt: 2, ml: 2 }} className='max-h-[96%] overflow-y-auto'>
+          <Card >
+            <Box display={"flex"} sx={{ mt: 1 }} className="justify-end">
+              <Button variant='outlined' onClick={() => { save() }}> SAVE </Button>
+            </Box>
+          </Card>
           <div className="bg-white">
             <div className="mx-auto max-w-7xl ">
               <div className="mx-auto max-w-4xl divide-y divide-gray-900/10">
@@ -278,7 +328,7 @@ export default function Page() {
                   })}
                 </Canvas>
               }
-            </Box> 
+            </Box>
           </Card>
           <Card sx={{ p: 2, mt: 2 }}>
             <PoseForm
