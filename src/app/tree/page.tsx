@@ -156,7 +156,8 @@ export default function Page() {
       }
       return {
         ...e1,
-        view: val
+        view: val,
+        view_all: val
       };
     });
     set_calib(new_calib);
