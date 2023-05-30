@@ -3,7 +3,7 @@
 import { LoadingActionButton, get_calib_param, get_vehicle_model, save_calib_param, save_vehicle_model } from '~/common/util';
 import { useEffect, useState } from 'react';
 import { Box, Button, Card, Checkbox, Collapse, IconButton, Paper, TextField, Typography, styled } from '@mui/material';
-import VehicleModelView, { QuatanionPoseForm, DEFAULT_POSE } from '~/components/vehicle_model_view';
+import VehicleModelView, { QuatanionPoseForm, DEFAULT_POSE, MyAxes, Vehicle, Ground, Sensor, BASE_LINK_TRANSFORM } from '~/components/vehicle_model_view';
 
 import { StyledTableCell } from '~/common/util';
 
@@ -12,6 +12,8 @@ import KeyboardArrowUpOutlinedIcon from '@mui/icons-material/KeyboardArrowUpOutl
 import { CheckBox } from '@mui/icons-material';
 import { Disclosure } from '@headlessui/react';
 import { MinusSmallIcon, PlusSmallIcon } from '@heroicons/react/24/outline'
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls } from '@react-three/drei';
 
 const default_link = {
   tgt_frame: {
@@ -49,12 +51,6 @@ export default function Page() {
   useEffect(() => {
     init();
   }, []);
-  useEffect(() => {
-    console.log(calib)
-  }, [calib])
-  useEffect(() => {
-    console.log(select_link)
-  }, [select_link])
 
   const select_link_handler = (row, i, j) => {
     const tgt = calib.find((ele, idx) => {
@@ -246,16 +242,50 @@ export default function Page() {
         </Card>
       </div>
       <div className="sm:basis-1/2 w-96 overflow-hidden">
-        <div className="max-w-[720px] max-h-[480px]">
-          <Card sx={{ p: 4, mt: 2, ml: 0 }}>
+        <Card sx={{ p: 2, mb: 2, mt: 2 }} className='max-w-[760px] max-h-[96%] overflow-y-auto'>
+          <Card sx={{ p: 2, mt: 2, ml: 0 }}>
             {/* <VehicleModelView vehicle_data={vehicle_data} /> */}
+
+            <Box sx={{ height: "400px", width: "inherit" }}>
+              {Object.keys(vehicle_data).length > 0 &&
+                <Canvas>
+                  <MyAxes />
+                  <gridHelper args={[5, 10]} />
+                  <gridHelper args={[5, 10]} position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]} />
+                  <gridHelper args={[5, 10]} position={[0, 0, 0]} rotation={[0, 0, Math.PI / 2]} />
+                  <OrbitControls />
+                  <ambientLight intensity={0.1} />
+                  {/* {vehicle_view && <Vehicle vehicle_data={vehicle_data} />} */}
+                  <Ground vehicle_data={vehicle_data} />
+                  {calib.map((ele, idx) => {
+                    if (ele.children === undefined) {
+                      if (ele.view) {
+                        return <Sensor parents={[BASE_LINK_TRANSFORM]} child={ele.transform} frame_id={ele.frame_id} />
+                      } else {
+                        return (<></>)
+                      }
+                    }
+                    return (<>
+                      {ele.view && <Sensor parents={[BASE_LINK_TRANSFORM]} child={ele.transform} frame_id={ele.frame_id} />}
+                      {ele.children.map((ele2) => {
+                        if (ele2.view) {
+                          return (<Sensor parents={[BASE_LINK_TRANSFORM, ele.transform]} child={ele2.transform} frame_id={ele2.frame_id} />);
+                        } else {
+                          return (<></>)
+                        }
+                      })}
+                    </>);
+                  })}
+                </Canvas>
+              }
+            </Box> 
           </Card>
-          <Card sx={{ p: 4, mt: 2, ml: 0 }}>
+          <Card sx={{ p: 2, mt: 2 }}>
             <PoseForm
               select_link={select_link}
               update_handler={link_update_handler} />
           </Card>
-        </div>
+        </Card>
       </div>
     </div >
   </>);

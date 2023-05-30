@@ -234,7 +234,7 @@ export const Vehicle = ({ vehicle_data }) => {
 export default function VehicleModelView({ vehicle_data }) {
   const default_pos = 4.5;
   return (<>
-    <Box sx={{ height: "630px" }}>
+    <Box sx={{ height: "480px" }}>
       <Canvas camera={{ position: [default_pos, default_pos, default_pos] }}>
         {/* <PerspectiveCamera position={[2, 2, 2]} fov={60} /> */}
         <MyAxes />
