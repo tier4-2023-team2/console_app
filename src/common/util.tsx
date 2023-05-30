@@ -28,6 +28,23 @@ export const save_vehicle_model = async (vehicle_data) => {
   return res;
 }
 
+export const get_config_data = async () => {
+  const response = await axios.get('/api/config', {
+    headers: {
+      "Content-Type": 'application/json',
+      Accept: 'application/json',
+    }
+  });
+  return response.data;
+}
+
+export const update_config_data = async (config) => {
+  const response = await axios.post('/api/config', {
+    config
+  });
+}
+
+
 export const LoadingActionButton = ({ async_fun, title }) => {
 
   const timer = useRef<number>();
