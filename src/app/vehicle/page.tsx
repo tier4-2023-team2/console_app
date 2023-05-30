@@ -1,0 +1,98 @@
+"use client";
+
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Paper from '@mui/material/Paper';
+
+import { get_vehicle_model } from '~/common/util';
+import { useEffect, useState } from 'react';
+import { Box, Button, TextField, Typography } from '@mui/material';
+import VehicleModelView from '~/components/vehicle_model_view';
+
+export default function Page() {
+
+  const [vehicle_data, set_vehicle_data] = useState({});
+  const init = async () => {
+    const response = await get_vehicle_model();
+    set_vehicle_data(response.data.data["/**"]["ros__parameters"]);
+  }
+
+  useEffect(() => {
+    init();
+  }, [])
+  return (<>
+    <div className="flex flex-row w-full h-full gap-4">
+      <div className="sm:basis-1/3 w-96 h-full min-w-[400px] ">
+        <TableContainer className='h-[800px]'>
+          <Table stickyHeader>
+            <TableHead>
+              <TableRow>
+                <TableCell><Typography>ParamName</Typography></TableCell>
+                <TableCell><Typography>Value</Typography></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {Object.keys(vehicle_data).map((ele, idx) => {
+                return (
+                  <TableRow key={`key_${idx}`} >
+                    <TableCell sx={{ py: 1, width: 150 }}>
+                      <Typography>{ele}</Typography>
+                    </TableCell>
+                    <TableCell sx={{ py: 1, width: 150 }}>
+                      <TextField margin="dense"
+                        // fullWidth
+                        sx={{ m: 0, p: 0 }}
+                        value={vehicle_data[ele]}
+                        onChange={(e) => {
+                          set_vehicle_data({
+                            ...vehicle_data,
+                            [ele]: parseFloat(e.target.value)
+                          })
+                        }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+              {Object.keys(vehicle_data).map((ele, idx) => {
+                return (
+                  <TableRow key={`key_${idx}`} >
+                    <TableCell sx={{ py: 1, width: 150 }}>
+                      <Typography>{ele}</Typography>
+                    </TableCell>
+                    <TableCell sx={{ py: 1, width: 150 }}>
+                      <TextField margin="dense"
+                        // fullWidth
+                        sx={{ m: 0, p: 0 }}
+                        value={vehicle_data[ele]}
+                        onChange={(e) => {
+                          set_vehicle_data({
+                            ...vehicle_data,
+                            [ele]: parseFloat(e.target.value)
+                          })
+                        }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <div className='w-full flex h-8 justify-end pr-4'>
+          <Button variant='outlined' className='w-24'>apply</Button>
+          <Button variant='outlined' className='w-24'>save</Button>
+        </div>
+      </div>
+      <div className="sm:basis-2/3 w-96 overflow-hidden">
+        <div className="max-w-[720px]">
+          <VehicleModelView vehicle_data={vehicle_data} />
+        </div>
+      </div>
+    </div>
+  </>);
+}
