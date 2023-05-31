@@ -4,14 +4,15 @@ import {
   get_calib_param, get_vehicle_model, save_calib_param, save_vehicle_model
 } from '~/common/util';
 import { useEffect, useState } from 'react';
-import { Box, Button, Card, Checkbox, Collapse, IconButton, Paper, TextField, Typography, styled } from '@mui/material';
+import { Box, Button, Card, Checkbox, Collapse, FormControlLabel, FormGroup, IconButton, Paper, Switch, TextField, Typography, styled } from '@mui/material';
 import VehicleModelView, { QuatanionPoseForm, DEFAULT_POSE, MyAxes, Vehicle, Ground, Sensor, BASE_LINK_TRANSFORM } from '~/components/vehicle_model_view';
 
 import KeyboardArrowDownOutlinedIcon from '@mui/icons-material/KeyboardArrowDownOutlined';
 import KeyboardArrowUpOutlinedIcon from '@mui/icons-material/KeyboardArrowUpOutlined';
 import { Disclosure } from '@headlessui/react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
+import { Camera } from 'three';
 
 const default_link = {
   tgt_frame: {
@@ -32,6 +33,7 @@ export default function Page() {
   const [vehicle_data, set_vehicle_data] = useState({});
   const [calib, set_calib] = useState([]);
   const [select_link, set_select_link] = useState(default_link);
+  const [view_body, set_view_body] = useState(true);
 
   const init = async () => {
     const vechile_model = await get_vehicle_model();
@@ -295,18 +297,21 @@ export default function Page() {
       <div className="sm:basis-1/2 w-96 overflow-hidden">
         <Card sx={{ p: 2, mb: 2, mt: 2 }} className='max-w-[760px] max-h-[96%] overflow-y-auto'>
           <Card sx={{ p: 2, mt: 2, ml: 0 }}>
-            {/* <VehicleModelView vehicle_data={vehicle_data} /> */}
-
-            <Box sx={{ height: "400px", width: "inherit" }}>
+            <Box sx={{ height: "360px", width: "inherit" }}>
+              <FormGroup sx={{ position: "absolute" }} className='z-10'>
+                <FormControlLabel control={<Switch defaultChecked={view_body} onChange={() => {
+                  set_view_body(!view_body);
+                }} />} label="VehicleBody" />
+              </FormGroup>
               {Object.keys(vehicle_data).length > 0 &&
-                <Canvas>
+                <Canvas style={{ position: "relative" }}>
                   <MyAxes />
                   <gridHelper args={[5, 10]} />
                   <gridHelper args={[5, 10]} position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]} />
                   <gridHelper args={[5, 10]} position={[0, 0, 0]} rotation={[0, 0, Math.PI / 2]} />
                   <OrbitControls />
                   <ambientLight intensity={0.1} />
-                  {/* {vehicle_view && <Vehicle vehicle_data={vehicle_data} />} */}
+                  {view_body && <Vehicle vehicle_data={vehicle_data} />}
                   <Ground vehicle_data={vehicle_data} />
                   {calib.map((ele, idx) => {
                     if (ele.children === undefined) {
@@ -329,6 +334,7 @@ export default function Page() {
                   })}
                 </Canvas>
               }
+
             </Box>
           </Card>
           <Card sx={{ p: 2, mt: 2 }}>

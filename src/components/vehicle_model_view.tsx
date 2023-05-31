@@ -230,12 +230,12 @@ export const Vehicle = ({ vehicle_data }) => {
     <VehicleSideOverhang vehicle_data={vehicle_data} />
   </>)
 }
-
+export const DEFAULT_CAMERA_POS = 4.5;
 export default function VehicleModelView({ vehicle_data }) {
-  const default_pos = 4.5;
+
   return (<>
     <Box sx={{ height: "480px" }}>
-      <Canvas camera={{ position: [default_pos, default_pos, default_pos] }}>
+      <Canvas camera={{ position: [DEFAULT_CAMERA_POS, DEFAULT_CAMERA_POS, DEFAULT_CAMERA_POS] }}>
         {/* <PerspectiveCamera position={[2, 2, 2]} fov={60} /> */}
         <MyAxes />
         <gridHelper args={[10, 20]} />
