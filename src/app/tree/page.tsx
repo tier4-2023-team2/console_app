@@ -4,7 +4,7 @@ import {
   get_calib_param, get_vehicle_model, save_calib_param, save_vehicle_model
 } from '~/common/util';
 import { useEffect, useState } from 'react';
-import { Box, Button, Card, Checkbox, Collapse, FormControlLabel, FormGroup, IconButton, Paper, Switch, TextField, Typography, styled } from '@mui/material';
+import { Box, Button, Card, Checkbox, Collapse, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControlLabel, FormGroup, IconButton, Paper, Switch, TextField, Typography, styled } from '@mui/material';
 import VehicleModelView, { QuatanionPoseForm, DEFAULT_POSE, MyAxes, Vehicle, Ground, Sensor, BASE_LINK_TRANSFORM } from '~/components/vehicle_model_view';
 
 import KeyboardArrowDownOutlinedIcon from '@mui/icons-material/KeyboardArrowDownOutlined';
@@ -12,6 +12,7 @@ import KeyboardArrowUpOutlinedIcon from '@mui/icons-material/KeyboardArrowUpOutl
 import { Disclosure } from '@headlessui/react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
+import { CodeBlock, codepen } from "react-code-blocks";
 
 const default_link = {
   tgt_frame: {
@@ -43,6 +44,32 @@ export default function Page() {
   const save = async () => {
     const response = await save_calib_param(calib);
   }
+  const delete_handler = (select_link) => {
+    const idx_i = select_link.idx_i;
+    const idx_j = select_link.idx_j;
+    if (idx_j === undefined) {
+      const new_link = calib.filter((ele, i) => {
+        return i !== idx_i;
+      })
+      set_calib(new_link);
+      set_select_link(default_link);
+    } else {
+      const new_link = calib.map((ele, i) => {
+        if (i === idx_i) {
+          return {
+            ...ele,
+            children: ele.children.filter((ele2, j) => {
+              return j !== idx_j;
+            })
+          }
+        }
+        return ele;
+      });
+      set_calib(new_link);
+      set_select_link(default_link);
+    }
+  }
+
   const link_update_handler = (new_form, frame_id, select_link) => {
     const idx_i = select_link.idx_i;
     const idx_j = select_link.idx_j;
@@ -166,13 +193,51 @@ export default function Page() {
     set_calib(new_calib);
   };
 
-  const PoseForm = ({ select_link, update_handler }) => {
+  const append_handler = (row, idx_i) => {
+    if (row === undefined) {
+      const add_frame = {
+        ...default_link.tgt_frame,
+        frame_id: `tmp_${parseInt(calib.length) + 1}_link`,
+        view: true,
+        view_all: true
+      }
+      const new_calib = [...calib, add_frame];
+      set_calib(new_calib);
+      return;
+    }
+    const idx = row.children === undefined ? 0 : row.children.length;
+    const add_frame = {
+      ...default_link.tgt_frame,
+      frame_id: `${row.frame_id}_${idx + 1}`,
+      view: true
+    }
+    const new_calib = calib.map((e, i) => {
+      if (idx_i === i) {
+        if (typeof row.children === "undefined") {
+          return {
+            ...e,
+            children: [add_frame]
+          }
+        } else {
+          return {
+            ...e,
+            children: [...e.children, add_frame]
+          }
+        }
+      }
+      return e;
+    });
+    set_calib(new_calib);
+  }
+
+  const PoseForm = ({ select_link, update_handler, delete_handler }) => {
     const [form, set_form] = useState(select_link.tgt_frame.transform);
     const [frame_id, set_frame_id] = useState(select_link.tgt_frame.frame_id);
     const [transform2, set_transform2] = useState(select_link.tgt_frame.transform);
+    const [open_dialog, set_open_dialog] = useState(false);
+    const [open_xacro_dialog, set_xacro_open_dialog] = useState(false);
 
-    const update = () => {
-
+    const update_form = () => {
       const valid = Object.keys(form).every((ele) => {
         return isFinite(parseFloat(form[ele]));
       })
@@ -189,6 +254,10 @@ export default function Page() {
         set_transform2(new_form);
         update_handler(new_form, frame_id, select_link);
       }
+    }
+
+    const delete_frame = () => {
+      set_open_dialog(true);
     }
 
     return (<>
@@ -262,11 +331,31 @@ export default function Page() {
 
       <Box>
         <Box display={"flex"} sx={{ mt: 1 }} className="justify-end">
+          <Button variant='outlined' sx={{ mr: "auto" }} disabled={frame_id === "base_link"}
+            onClick={() => { set_xacro_open_dialog(true); }}> SHOW XACRO </Button>
+          <Button variant='outlined'
+            color="error"
+            disabled={frame_id === "base_link"}
+            onClick={() => { delete_frame() }}> delete </Button>
           <Button variant='outlined'
             disabled={frame_id === "base_link"}
-            onClick={() => { update() }}> Update </Button>
+            onClick={() => { update_form() }}> Update </Button>
         </Box>
       </Box>
+
+      <div>
+        <AlertDialog open={open_dialog}
+          ok={() => {
+            set_open_dialog(false);
+            delete_handler(select_link);
+          }}
+          ng={() => {
+            set_open_dialog(false);
+          }} />
+      </div>
+      <div>
+        <XacroDialog open={open_xacro_dialog} tgt={select_link.tgt_frame} close={() => { set_xacro_open_dialog(false) }} />
+      </div>
 
       <QuatanionPoseForm transform={transform2} parents={select_link.parents} />
     </>);
@@ -278,7 +367,8 @@ export default function Page() {
         <Card sx={{ p: 2, mb: 2, mt: 2, ml: 2 }} className='max-h-[96%] overflow-y-auto'>
           <Card >
             <Box display={"flex"} sx={{ mt: 1 }} className="justify-end">
-              <Button variant='outlined' onClick={() => { save() }}> SAVE </Button>
+              <Button variant='outlined' sx={{ mr: 1 }} onClick={() => { append_handler(); }}> APPEND FRAME </Button>
+              <Button variant='outlined' sx={{ mr: 8 }} onClick={() => { save() }}> SAVE </Button>
             </Box>
           </Card>
           <div className="bg-white">
@@ -289,7 +379,8 @@ export default function Page() {
                     <RowFromBaseLink key={`row_${row.frame_id}`}
                       row={row} i={i}
                       select_link_handler={select_link_handler}
-                      check_handler={check_handler} />
+                      check_handler={check_handler}
+                      append_handler={append_handler} />
                   ))}
                 </dl>
               </div>
@@ -343,7 +434,9 @@ export default function Page() {
           <Card sx={{ p: 2, mt: 2 }}>
             <PoseForm
               select_link={select_link}
-              update_handler={link_update_handler} />
+              update_handler={link_update_handler}
+              delete_handler={delete_handler}
+            />
           </Card>
         </Card>
       </div>
@@ -354,7 +447,7 @@ export default function Page() {
 
 
 
-const RowFromBaseLink = ({ row, i, select_link_handler, check_handler }) => {
+const RowFromBaseLink = ({ row, i, select_link_handler, check_handler, append_handler }) => {
   // const [open, set_open] = useState(true);
   return (
     <>
@@ -364,7 +457,6 @@ const RowFromBaseLink = ({ row, i, select_link_handler, check_handler }) => {
             <dt>
               <Disclosure.Button className="flex w-full text-left text-gray-900"
                 onClick={(evt) => {
-                  // set_open(!open);
                   evt.stopPropagation();
                 }}>
                 <span className="flex h-7 items-center w-[30px]">
@@ -384,6 +476,14 @@ const RowFromBaseLink = ({ row, i, select_link_handler, check_handler }) => {
                 <span className="text-base leading-7 pl-2">
                   <Typography>{row.frame_id}</Typography>
                 </span>
+
+                <Button sx={{ ml: "auto", mr: 8 }} variant='outlined'
+                  onClick={(evt) => {
+                    append_handler(row, i);
+                    evt.stopPropagation();
+                  }}>
+                  Append Child Frame
+                </Button>
               </Disclosure.Button>
             </dt>
             <Disclosure.Panel as="dd" className="mt-2 pr-12">
@@ -479,3 +579,65 @@ const RowChildrenLink = ({ row, i, j, select_link_handler, check_handler }) => {
     </div>
   </>);
 };
+
+const AlertDialog = ({ open, ok, ng }) => {
+  return (
+    <Dialog
+      open={open}
+      onClose={ng}
+      aria-labelledby="alert-dialog-title"
+      aria-describedby="alert-dialog-description"
+    >
+      <DialogTitle id="alert-dialog-title">
+        {"Delete this frame?"}
+      </DialogTitle>
+      <DialogActions>
+        <Button onClick={ng}>CANCEL</Button>
+        <Button onClick={ok}>DELETE</Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+const XacroDialog = ({ open, tgt, close }) => {
+  const [text, set_text] = useState(convert_text(tgt));
+  useEffect(() => {
+    console.log(tgt);
+  }, [])
+  return (
+    <Dialog
+      open={open}
+      aria-labelledby="alert-dialog-title"
+      aria-describedby="alert-dialog-description"
+    >
+      <DialogTitle id="alert-dialog-title">
+        {"Xacro"}
+      </DialogTitle>
+      <DialogContent>
+        <CodeBlock
+          text={text}
+          language={"xml"}
+          showLineNumbers={true}
+          theme={codepen}
+        />
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={() => { close() }}>close</Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+const convert_text = (tgt) => {
+  let txt = `<xacro:property name="calibration" value="\${xacro.load_yaml('$(arg config_dir)/sensors_calibration.yaml')}"/>
+<xacro:sensor_kit_macro
+    parent="base_link"
+    x="\${calibration['base_link']['${tgt.frame_id}']['x']}"
+    y="\${calibration['base_link']['${tgt.frame_id}']['y']}"
+    z="\${calibration['base_link']['${tgt.frame_id}']['z']}"
+    roll="\${calibration['base_link']['${tgt.frame_id}']['roll']}"
+    pitch="\${calibration['base_link']['${tgt.frame_id}']['pitch']}"
+    yaw="\${calibration['base_link']['${tgt.frame_id}']['yaw']}"
+  /> `;
+  return txt;
+}
