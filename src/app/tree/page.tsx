@@ -43,7 +43,7 @@ export default function Page() {
   const save = async () => {
     const response = await save_calib_param(calib);
   }
-  const link_update_handler = (new_form, select_link) => {
+  const link_update_handler = (new_form, frame_id, select_link) => {
     const idx_i = select_link.idx_i;
     const idx_j = select_link.idx_j;
     if (idx_j === undefined) {
@@ -51,6 +51,7 @@ export default function Page() {
         if (i === idx_i) {
           return {
             ...ele,
+            frame_id: frame_id,
             transform: new_form
           }
         }
@@ -72,6 +73,7 @@ export default function Page() {
               if (j === idx_j) {
                 return {
                   ...ele2,
+                  frame_id: frame_id,
                   transform: new_form
                 }
               }
@@ -166,10 +168,11 @@ export default function Page() {
 
   const PoseForm = ({ select_link, update_handler }) => {
     const [form, set_form] = useState(select_link.tgt_frame.transform);
+    const [frame_id, set_frame_id] = useState(select_link.tgt_frame.frame_id);
     const [transform2, set_transform2] = useState(select_link.tgt_frame.transform);
-    const [frame, set_frame] = useState(select_link.tgt_frame);
 
     const update = () => {
+
       const valid = Object.keys(form).every((ele) => {
         return isFinite(parseFloat(form[ele]));
       })
@@ -184,24 +187,23 @@ export default function Page() {
         };
         set_form(new_form)
         set_transform2(new_form);
-        update_handler(new_form, select_link);
+        update_handler(new_form, frame_id, select_link);
       }
     }
 
-    useEffect(() => {
-      console.log(frame)
-    }, [frame]);
     return (<>
-      <Box>
-        <Typography variant="h6">
-          frame_id :  {frame.frame_id}
-        </Typography>
+      <Box display={"flex"}>
+        <Typography variant="h6">frame_id: </Typography>
+        <TextField size="small" fullWidth value={frame_id} sx={{ ml: 2 }}
+          onChange={(evt) => {
+            set_frame_id(evt.target.value);
+          }} />
       </Box>
-      <Box>
+      <Box sx={{ mt: 1 }}>
         <TextField size="small" label="Tree Structure" fullWidth InputProps={{
           readOnly: true,
         }}
-          defaultValue={[...select_link.parents, frame].map((ele, idx) => {
+          value={[...select_link.parents, { frame_id: frame_id }].map((ele, idx) => {
             return `${ele.frame_id}`
           }).join(" > ")}
         />
@@ -260,7 +262,9 @@ export default function Page() {
 
       <Box>
         <Box display={"flex"} sx={{ mt: 1 }} className="justify-end">
-          <Button variant='outlined' onClick={() => { update() }}> Update </Button>
+          <Button variant='outlined'
+            disabled={frame_id === "base_link"}
+            onClick={() => { update() }}> Update </Button>
         </Box>
       </Box>
 
@@ -351,16 +355,16 @@ export default function Page() {
 
 
 const RowFromBaseLink = ({ row, i, select_link_handler, check_handler }) => {
-  const [open, set_open] = useState(false);
+  // const [open, set_open] = useState(true);
   return (
     <>
-      <Disclosure as="div" key={row.frame_id} className="pt-6">
-        {() => (
+      <Disclosure as="div" key={row.frame_id} className="pt-6" defaultOpen={true}>
+        {({ open }) => (
           <>
             <dt>
               <Disclosure.Button className="flex w-full text-left text-gray-900"
                 onClick={(evt) => {
-                  set_open(!open);
+                  // set_open(!open);
                   evt.stopPropagation();
                 }}>
                 <span className="flex h-7 items-center w-[30px]">
