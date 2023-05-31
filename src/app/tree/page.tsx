@@ -12,7 +12,6 @@ import KeyboardArrowUpOutlinedIcon from '@mui/icons-material/KeyboardArrowUpOutl
 import { Disclosure } from '@headlessui/react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
-import { Camera } from 'three';
 
 const default_link = {
   tgt_frame: {

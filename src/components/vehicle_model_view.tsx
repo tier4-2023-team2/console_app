@@ -1,15 +1,13 @@
 "use client";
 
-import { Box, Grid, TextField, Typography, linkClasses } from "@mui/material";
+import { Box, TextField, Typography } from "@mui/material";
 
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { DoubleSide } from 'three';
-import { CubeCamera, Cylinder, OrbitControls, OrthographicCamera, PerspectiveCamera } from '@react-three/drei'
+import { OrbitControls } from '@react-three/drei'
 import * as THREE from "three"
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useEffect } from "react";
-import { useLoader } from '@react-three/fiber';
-import { ColladaLoader } from 'three/examples/jsm/loaders/ColladaLoader';
 
 export const BASE_LINK_TRANSFORM = {
   x: 0,
@@ -209,20 +207,6 @@ export const Ground = ({ vehicle_data }) => {
   </>)
 }
 
-
-export const Model = ({ vehicle_data }) => {
-  const path = `lexus.dae`;
-  const { scene } = useLoader(ColladaLoader, path);
-
-  const material = new THREE.MeshStandardMaterial({ color: 0xff0000 }); // 赤色
-  return <primitive object={scene}
-    position={[0, 0, vehicle_data.wheel_base / 2]}
-    rotation={[0, Math.PI / 2, 0]}
-    dispose={null}
-    material={material}
-  />;
-}
-
 export const Vehicle = ({ vehicle_data }) => {
   return (<>
     <VehicleBody vehicle_data={vehicle_data} />
@@ -254,41 +238,6 @@ export default function VehicleModelView({ vehicle_data }) {
     </Box>
   </>)
 
-}
-
-export const AxisHelper2 = ({ color, direction, length, pos }) => {
-  const { scene } = useThree();
-  console.log(pos)
-  const normalizedDirection = direction.normalize();
-  const arrowHeadLength = length * 0.05;
-
-  const arrowGeometry = new THREE.ConeGeometry(arrowHeadLength, arrowHeadLength * 2, 8);
-  const arrowMaterial = new THREE.MeshBasicMaterial({ color });
-  const arrowMesh = new THREE.Mesh(arrowGeometry, arrowMaterial);
-  arrowMesh.position.copy(normalizedDirection.multiplyScalar(length - arrowHeadLength));
-
-  const lineGeometry = new THREE.BufferGeometry().setFromPoints(
-    [[pos.x, pos.y, pos.z], normalizedDirection.multiplyScalar(length - arrowHeadLength)]);
-  const lineMaterial = new THREE.LineBasicMaterial({ color });
-  const line = new THREE.Line(lineGeometry, lineMaterial);
-  line.material.linewidth = 3;
-
-  scene.add(line);
-
-  return null;
-};
-
-
-export const MyAxes2 = ({ pos }) => {
-  const axis_length = 0.3;
-  return (<>
-    {/* <AxisHelper2
-            color="red"
-            direction={new THREE.Vector3(0, 0, 1)}
-            length={axis_length}
-            pos={pos}
-        /> */}
-  </>)
 }
 
 
