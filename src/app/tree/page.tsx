@@ -701,9 +701,9 @@ const convert_text = (tgt, macro, parent) => {
   }
 
   if (parent.frame_id === "base_link") {
-    txt = `<xacro:property name="calibration" value="\${xacro.load_yaml('$(arg config_dir)/sensor_kit_calibration.yaml')}"/>`;
+    txt = `<xacro:property name="calibration" value="\${xacro.load_yaml('$(arg config_dir)/sensor_kit_calibration.yaml')}"/> <!-- just once -->`;
   } else {
-    txt = `<xacro:property name="calibration" value="\${xacro.load_yaml('$(arg config_dir)/sensors_calibration.yaml')}"/>`;
+    txt = `<xacro:property name="calibration" value="\${xacro.load_yaml('$(arg config_dir)/sensors_calibration.yaml')}"/> <!-- just once -->`;
   }
 
   if (macro.type === 0) { //sensor_kit_macro
