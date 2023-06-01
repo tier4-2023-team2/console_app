@@ -368,13 +368,13 @@ export default function Page() {
           <Card >
             <Box display={"flex"} sx={{ mt: 1 }} className="justify-end">
               <Button variant='outlined' sx={{ mr: 1 }} onClick={() => { append_handler(); }}> APPEND FRAME </Button>
-              <Button variant='outlined' sx={{ mr: 8 }} onClick={() => { save() }}> SAVE </Button>
+              <Button variant='outlined' sx={{ mr: 1 }} onClick={() => { save() }}> SAVE </Button>
             </Box>
           </Card>
-          <div className="bg-white">
-            <div className="mx-auto max-w-7xl ">
-              <div className="mx-auto max-w-4xl divide-y divide-gray-900/10">
-                <dl className="mt-0 divide-y divide-gray-900/10">
+          <div className="bg-white w-full">
+            <div className="w-full">
+              <div className="divide-y divide-gray-900/10 w-full">
+                <dl className="mt-0 divide-y divide-gray-900/10 w-full">
                   {calib.map((row, i) => (
                     <RowFromBaseLink key={`row_${row.frame_id}`}
                       row={row} i={i}
@@ -389,7 +389,7 @@ export default function Page() {
         </Card>
       </div>
       <div className="sm:basis-1/2 w-96 overflow-hidden">
-        <Card sx={{ p: 2, mb: 2, mt: 2 }} className='max-w-[760px] max-h-[96%] overflow-y-auto'>
+        <Card sx={{ p: 2, mb: 2, mt: 2 }} className='w-full max-h-[96%] overflow-y-auto'>
           <Card sx={{ p: 2, mt: 2, ml: 0 }}>
             <Box sx={{ height: "360px", width: "inherit" }}>
               <FormGroup sx={{ position: "absolute" }} className='z-10'>
@@ -407,19 +407,19 @@ export default function Page() {
                   <ambientLight intensity={0.1} />
                   {view_body && <Vehicle vehicle_data={vehicle_data} />}
                   <Ground vehicle_data={vehicle_data} />
-                  {calib.map((ele, idx) => {
+                  {calib.map((ele, idx_i) => {
                     if (ele.children === undefined) {
                       if (ele.view) {
-                        return <Sensor parents={[BASE_LINK_TRANSFORM]} child={ele.transform} frame_id={ele.frame_id} />
+                        return <Sensor key={`sensor_key_${idx_i}`} parents={[BASE_LINK_TRANSFORM]} child={ele.transform} frame_id={ele.frame_id} />
                       } else {
                         return (<></>)
                       }
                     }
                     return (<>
-                      {ele.view && <Sensor parents={[BASE_LINK_TRANSFORM]} child={ele.transform} frame_id={ele.frame_id} />}
-                      {ele.children.map((ele2) => {
+                      {ele.view && <Sensor key={`sensor_key_${idx_i}`} parents={[BASE_LINK_TRANSFORM]} child={ele.transform} frame_id={ele.frame_id} />}
+                      {ele.children.map((ele2, idx_j) => {
                         if (ele2.view) {
-                          return (<Sensor parents={[BASE_LINK_TRANSFORM, ele.transform]} child={ele2.transform} frame_id={ele2.frame_id} />);
+                          return (<Sensor key={`child_sensor_key_${idx_i}_${idx_j}`} parents={[BASE_LINK_TRANSFORM, ele.transform]} child={ele2.transform} frame_id={ele2.frame_id} />);
                         } else {
                           return (<></>)
                         }
@@ -442,16 +442,12 @@ export default function Page() {
       </div>
     </div >
   </>);
-
 }
 
-
-
 const RowFromBaseLink = ({ row, i, select_link_handler, check_handler, append_handler }) => {
-  // const [open, set_open] = useState(true);
   return (
     <>
-      <Disclosure as="div" key={row.frame_id} className="pt-6" defaultOpen={true}>
+      <Disclosure as="div" key={row.frame_id} className="pt-6 w-full" defaultOpen={true}>
         {({ open }) => (
           <>
             <dt>
@@ -477,7 +473,7 @@ const RowFromBaseLink = ({ row, i, select_link_handler, check_handler, append_ha
                   <Typography>{row.frame_id}</Typography>
                 </span>
 
-                <Button sx={{ ml: "auto", mr: 8 }} variant='outlined'
+                <Button sx={{ ml: "auto", mr: 1 }} variant='outlined'
                   onClick={(evt) => {
                     append_handler(row, i);
                     evt.stopPropagation();
@@ -486,7 +482,7 @@ const RowFromBaseLink = ({ row, i, select_link_handler, check_handler, append_ha
                 </Button>
               </Disclosure.Button>
             </dt>
-            <Disclosure.Panel as="dd" className="mt-2 pr-12">
+            <Disclosure.Panel as="dd" className="mt-2 pr-0">
               <p className="text-base leading-7 text-gray-600">
                 <HeaderRow />
                 <RowChildrenLink row={row} i={i} j={undefined} select_link_handler={select_link_handler} check_handler={check_handler} />
@@ -504,32 +500,31 @@ const RowFromBaseLink = ({ row, i, select_link_handler, check_handler, append_ha
 
 const HeaderRow = () => {
   return (
-    <div className="overflow-hidden bg-white shadow pl-10">
-      <div className="border-t border-gray-200 py-5 sm:p-0">
-        <dl className="divide-y sm:divide-gray-200">
-          <div className="py-2 grid grid-cols-8 gap-4" onClick={() => { }}>
-            <dd className="text-sm font-medium text-gray-500 col-span-2" >
-              <Typography >{`frame_id`}</Typography>
-            </dd>
-            <dd className="mt-1 text-sm text-gray-900 col-span-1 sm:mt-0">
-              <Typography textOverflow={"ellipsis"}>{`x`}</Typography>
-            </dd>
-            <dd className="mt-1 text-sm text-gray-900 col-span-1 sm:mt-0">
-              <Typography textOverflow={"ellipsis"}>{`y`}</Typography>
-            </dd>
-            <dd className="mt-1 text-sm text-gray-900 col-span-1 sm:mt-0">
-              <Typography textOverflow={"ellipsis"}>{`z`}</Typography>
-            </dd>
-            <dd className="mt-1 text-sm text-gray-900 col-span-1 sm:mt-0">
-              <Typography textOverflow={"ellipsis"}>{`roll`}</Typography>
-            </dd>
-            <dd className="mt-1 text-sm text-gray-900 col-span-1 sm:mt-0">
-              <Typography textOverflow={"ellipsis"}>{`pitch`}</Typography>
-            </dd>
-            <dd className="mt-1 text-sm text-gray-900 col-span-1 sm:mt-0">
-              <Typography textOverflow={"ellipsis"}>{`yaw`}</Typography>
-            </dd>
-          </div>
+    <div className="overflow-hidden bg-white shadow">
+      <div className="border-t border-gray-200 p-0">
+        <dl className="py-2 grid grid-cols-8 gap-4">
+          <dt className="text-sm text-gray-900 col-span-1"></dt>
+          <dt className="text-sm text-gray-900" >
+            <Typography >{`frame_id`}</Typography>
+          </dt>
+          <dt className="text-sm text-gray-900" >
+            <Typography textOverflow={"ellipsis"}>{`x`}</Typography>
+          </dt>
+          <dt className="text-sm text-gray-900" >
+            <Typography textOverflow={"ellipsis"}>{`y`}</Typography>
+          </dt>
+          <dt className="text-sm text-gray-900" >
+            <Typography textOverflow={"ellipsis"}>{`z`}</Typography>
+          </dt>
+          <dt className="text-sm text-gray-900" >
+            <Typography textOverflow={"ellipsis"}>{`roll`}</Typography>
+          </dt>
+          <dt className="text-sm text-gray-900" >
+            <Typography textOverflow={"ellipsis"}>{`pitch`}</Typography>
+          </dt>
+          <dt className="text-sm text-gray-900" >
+            <Typography textOverflow={"ellipsis"}>{`yaw`}</Typography>
+          </dt>
         </dl>
       </div>
     </div>
@@ -538,42 +533,40 @@ const HeaderRow = () => {
 
 const RowChildrenLink = ({ row, i, j, select_link_handler, check_handler }) => {
   return (<>
-    <div className="overflow-hidden bg-white shadow pl-10">
-      <div className="border-t border-gray-200 py-5 sm:p-0">
-        <dl className="divide-y sm:divide-gray-200">
-          <div className="py-2 grid grid-cols-8 gap-4 hover:bg-gray-200" onClick={() => {
-            select_link_handler(row, i, j);
-          }}>
-            <dt className="text-sm font-medium text-gray-500 col-span-2 transform_table flex" >
-              <Checkbox checked={row.view} sx={{ p: 1 }}
-                onClick={(evt) => {
-                  check_handler(row, i, j);
-                  evt.stopPropagation();
-                }}
-              />
-              <Typography>
-                {row.frame_id}
-              </Typography>
-            </dt>
-            <dd className="mt-1 text-sm text-gray-900 col-span-1 transform_table">
-              <Typography >{`${row.transform.x}`}</Typography>
-            </dd>
-            <dd className="mt-1 text-sm text-gray-900 col-span-1 transform_table">
-              <Typography >{`${row.transform.y}`}</Typography>
-            </dd>
-            <dd className="mt-1 text-sm text-gray-900 col-span-1 transform_table">
-              <Typography >{`${row.transform.z}`}</Typography>
-            </dd>
-            <dd className="mt-1 text-sm text-gray-900 col-span-1 transform_table">
-              <Typography >{`${row.transform.roll}`}</Typography>
-            </dd>
-            <dd className="mt-1 text-sm text-gray-900 col-span-1 transform_table">
-              <Typography>{`${row.transform.pitch}`}</Typography>
-            </dd>
-            <dd className="mt-1 text-sm text-gray-900 col-span-1 transform_table">
-              <Typography >{`${row.transform.yaw}`}</Typography>
-            </dd>
-          </div>
+    <div className="overflow-hidden bg-white shadow">
+      <div className="border-t border-gray-200 p-0">
+        <dl className="p-0 grid grid-cols-8 gap-4 hover:bg-gray-200" onClick={() => {
+          select_link_handler(row, i, j);
+        }}>
+          <dt className="text-sm font-medium text-gray-500 transform_table w-8" style={{ padding: 0 }}>
+            <Checkbox checked={row.view} sx={{ p: 1, mr: 0 }}
+              onClick={(evt) => {
+                check_handler(row, i, j);
+                evt.stopPropagation();
+              }}
+            />
+          </dt>
+          <dt className="text-sm text-gray-900 transform_table py-[9px]" >
+            <Typography>{row.frame_id}</Typography>
+          </dt>
+          <dt className="text-sm text-gray-900 transform_table py-[9px]">
+            <Typography >{`${row.transform.x}`}</Typography>
+          </dt>
+          <dt className="text-sm text-gray-900 transform_table py-[9px]" >
+            <Typography >{`${row.transform.y}`}</Typography>
+          </dt>
+          <dt className="text-sm text-gray-900 transform_table py-[9px]" >
+            <Typography >{`${row.transform.z}`}</Typography>
+          </dt>
+          <dt className="text-sm text-gray-900 transform_table py-[9px]" >
+            <Typography >{`${row.transform.roll}`}</Typography>
+          </dt>
+          <dt className="text-sm text-gray-900 transform_table py-[9px]" >
+            <Typography>{`${row.transform.pitch}`}</Typography>
+          </dt>
+          <dt className="text-sm text-gray-900 transform_table py-[9px]" >
+            <Typography >{`${row.transform.yaw}`}</Typography>
+          </dt>
         </dl>
       </div>
     </div>
@@ -600,7 +593,7 @@ const AlertDialog = ({ open, ok, ng }) => {
 }
 
 const XacroDialog = ({ open, tgt, close, parent }) => {
-  // const [text, set_text] = useState(convert_text(tgt));
+  const [text, set_text] = useState("");
   const [value, setValue] = useState(0);
   useEffect(() => {
     console.log(tgt);
@@ -614,6 +607,15 @@ const XacroDialog = ({ open, tgt, close, parent }) => {
       'aria-controls': `simple-tabpanel-${index}`,
     };
   }
+
+  useEffect(() => {
+    set_text(convert_text(tgt, macro_list[value], parent));
+  }, [value]);
+
+  const copy = async () => {
+    await global.navigator.clipboard.writeText(text);
+  }
+
   interface TabPanelProps {
     children?: React.ReactNode;
     index: number;
@@ -676,7 +678,7 @@ const XacroDialog = ({ open, tgt, close, parent }) => {
         {macro_list.map((ele, i) => {
           return (<TabPanel value={value} index={i}>
             <CodeBlock
-              text={convert_text(tgt, ele, parent)}
+              text={text}
               language={"xml"}
               showLineNumbers={true}
               theme={codepen}
@@ -684,10 +686,9 @@ const XacroDialog = ({ open, tgt, close, parent }) => {
           </TabPanel>);
         })}
 
-
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => { close() }}>copy</Button>
+        <Button onClick={() => { copy() }}>copy</Button>
         <Button onClick={() => { close() }}>close</Button>
       </DialogActions>
     </Dialog>
@@ -701,9 +702,9 @@ const convert_text = (tgt, macro, parent) => {
   }
 
   if (parent.frame_id === "base_link") {
-    txt = `<xacro:property name="calibration" value="\${xacro.load_yaml('$(arg config_dir)/sensor_kit_calibration.yaml')}"/> <!-- just once -->`;
-  } else {
     txt = `<xacro:property name="calibration" value="\${xacro.load_yaml('$(arg config_dir)/sensors_calibration.yaml')}"/> <!-- just once -->`;
+  } else {
+    txt = `<xacro:property name="calibration" value="\${xacro.load_yaml('$(arg config_dir)/sensor_kit_calibration.yaml')}"/> <!-- just once -->`;
   }
 
   if (macro.type === 0) { //sensor_kit_macro

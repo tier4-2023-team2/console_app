@@ -1,7 +1,7 @@
 import './globals.css'
 
 export const metadata = {
-  title: 'Console App',
+  title: 'Q-viz',
   description: '',
 }
 
