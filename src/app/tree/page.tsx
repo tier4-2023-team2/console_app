@@ -4,7 +4,7 @@ import {
   get_calib_param, get_vehicle_model, save_calib_param, save_vehicle_model
 } from '~/common/util';
 import { useEffect, useState } from 'react';
-import { Box, Button, Card, Checkbox, Collapse, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControlLabel, FormGroup, IconButton, Paper, Switch, TextField, Typography, styled } from '@mui/material';
+import { Box, Button, Card, Checkbox, Collapse, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControlLabel, FormGroup, IconButton, Paper, Switch, Tab, Tabs, TextField, Typography, styled } from '@mui/material';
 import VehicleModelView, { QuatanionPoseForm, DEFAULT_POSE, MyAxes, Vehicle, Ground, Sensor, BASE_LINK_TRANSFORM } from '~/components/vehicle_model_view';
 
 import KeyboardArrowDownOutlinedIcon from '@mui/icons-material/KeyboardArrowDownOutlined';
@@ -354,7 +354,7 @@ export default function Page() {
           }} />
       </div>
       <div>
-        <XacroDialog open={open_xacro_dialog} tgt={select_link.tgt_frame} close={() => { set_xacro_open_dialog(false) }} />
+        <XacroDialog open={open_xacro_dialog} tgt={select_link.tgt_frame} parent={select_link.parents.slice(-1)[0]} close={() => { set_xacro_open_dialog(false) }} />
       </div>
 
       <QuatanionPoseForm transform={transform2} parents={select_link.parents} />
@@ -599,45 +599,176 @@ const AlertDialog = ({ open, ok, ng }) => {
   );
 }
 
-const XacroDialog = ({ open, tgt, close }) => {
-  const [text, set_text] = useState(convert_text(tgt));
+const XacroDialog = ({ open, tgt, close, parent }) => {
+  // const [text, set_text] = useState(convert_text(tgt));
+  const [value, setValue] = useState(0);
   useEffect(() => {
     console.log(tgt);
   }, [])
+  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+    setValue(newValue);
+  };
+  function a11yProps(index: number) {
+    return {
+      id: `simple-tab-${index}`,
+      'aria-controls': `simple-tabpanel-${index}`,
+    };
+  }
+  interface TabPanelProps {
+    children?: React.ReactNode;
+    index: number;
+    value: number;
+  }
+  function TabPanel(props: TabPanelProps) {
+    const { children, value, index, ...other } = props;
+
+    return (
+      <div
+        role="tabpanel"
+        hidden={value !== index}
+        id={`simple-tabpanel-${index}`}
+        aria-labelledby={`simple-tab-${index}`}
+        {...other}
+      >
+        {value === index && (
+          <Box sx={{ p: 3 }}>
+            <Typography>{children}</Typography>
+          </Box>
+        )}
+      </div>
+    );
+  }
+  const macro_list = [
+    {
+      name: "sensor_kit_macro",
+      type: 0
+    }, {
+      name: "VLP-16",
+      type: 1
+    }, {
+      name: "monocular_camera_macro",
+      type: 2
+    }, {
+      name: "imu_macro",
+      type: 3
+    },
+  ]
+
   return (
     <Dialog
       open={open}
+      fullWidth
+      maxWidth={"lg"}
       aria-labelledby="alert-dialog-title"
       aria-describedby="alert-dialog-description"
     >
       <DialogTitle id="alert-dialog-title">
-        {"Xacro"}
+        {"markup text for xacrofile"}
       </DialogTitle>
       <DialogContent>
-        <CodeBlock
-          text={text}
-          language={"xml"}
-          showLineNumbers={true}
-          theme={codepen}
-        />
+        <Box display={"flex"} sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
+            {macro_list.map((ele, i) => {
+              return (<Tab key={`tab_${i}`} label={ele.name} {...a11yProps(i)} />);
+            })}
+          </Tabs>
+        </Box>
+        {macro_list.map((ele, i) => {
+          return (<TabPanel value={value} index={i}>
+            <CodeBlock
+              text={convert_text(tgt, ele, parent)}
+              language={"xml"}
+              showLineNumbers={true}
+              theme={codepen}
+            />
+          </TabPanel>);
+        })}
+
+
       </DialogContent>
       <DialogActions>
+        <Button onClick={() => { close() }}>copy</Button>
         <Button onClick={() => { close() }}>close</Button>
       </DialogActions>
     </Dialog>
   );
 }
 
-const convert_text = (tgt) => {
-  let txt = `<xacro:property name="calibration" value="\${xacro.load_yaml('$(arg config_dir)/sensors_calibration.yaml')}"/>
-<xacro:sensor_kit_macro
-    parent="base_link"
-    x="\${calibration['base_link']['${tgt.frame_id}']['x']}"
-    y="\${calibration['base_link']['${tgt.frame_id}']['y']}"
-    z="\${calibration['base_link']['${tgt.frame_id}']['z']}"
-    roll="\${calibration['base_link']['${tgt.frame_id}']['roll']}"
-    pitch="\${calibration['base_link']['${tgt.frame_id}']['pitch']}"
-    yaw="\${calibration['base_link']['${tgt.frame_id}']['yaw']}"
-  /> `;
+const convert_text = (tgt, macro, parent) => {
+  let txt = "";
+  if (parent === undefined) {
+    return "";
+  }
+
+  if (parent.frame_id === "base_link") {
+    txt = `<xacro:property name="calibration" value="\${xacro.load_yaml('$(arg config_dir)/sensor_kit_calibration.yaml')}"/>`;
+  } else {
+    txt = `<xacro:property name="calibration" value="\${xacro.load_yaml('$(arg config_dir)/sensors_calibration.yaml')}"/>`;
+  }
+
+  if (macro.type === 0) { //sensor_kit_macro
+    txt += `
+  <xacro:${macro.name} parent="${parent.frame_id}"
+  x="\${calibration['${parent.frame_id}']['${tgt.frame_id}']['x']}"
+  y="\${calibration['${parent.frame_id}']['${tgt.frame_id}']['y']}"
+  z="\${calibration['${parent.frame_id}']['${tgt.frame_id}']['z']}"
+  roll="\${calibration['${parent.frame_id}']['${tgt.frame_id}']['roll']}"
+  pitch="\${calibration['${parent.frame_id}']['${tgt.frame_id}']['pitch']}"
+  yaw="\${calibration['${parent.frame_id}']['${tgt.frame_id}']['yaw']}"
+/> `;
+  } else if (macro.type === 1) { //VLP-16
+    txt += `
+<xacro:${macro.name} parent="${parent.frame_id}" name="${tgt.frame_id}" topic="${tgt.frame_id}/velodyne_points" hz="10" samples="220" gpu="false">
+  <origin
+    xyz="\${calibration['${parent.frame_id}']['${tgt.frame_id}']['x']}
+    \${calibration['${parent.frame_id}']['${tgt.frame_id}']['y']}
+    \${calibration['${parent.frame_id}']['${tgt.frame_id}']['z']}"
+    rpy="\${calibration['${parent.frame_id}']['${tgt.frame_id}']['roll']}
+    \${calibration['${parent.frame_id}']['${tgt.frame_id}']['pitch']}
+    \${calibration['${parent.frame_id}']['${tgt.frame_id}']['yaw']}"/>
+</xacro:${macro.name}>`;
+  } else if (macro.type === 1) { //VLP-16
+    txt += `
+<xacro:${macro.name} parent="${parent.frame_id}" name="${tgt.frame_id}" topic="${tgt.frame_id}/velodyne_points" hz="10" samples="220" gpu="false">
+<origin
+  xyz="\${calibration['${parent.frame_id}']['${tgt.frame_id}']['x']}
+  \${calibration['${parent.frame_id}']['${tgt.frame_id}']['y']}
+  \${calibration['${parent.frame_id}']['${tgt.frame_id}']['z']}"
+  rpy="\${calibration['${parent.frame_id}']['${tgt.frame_id}']['roll']}
+  \${calibration['${parent.frame_id}']['${tgt.frame_id}']['pitch']}
+  \${calibration['${parent.frame_id}']['${tgt.frame_id}']['yaw']}"/>
+</xacro:${macro.name}>`;
+  } else if (macro.type === 2) { //monocular_camera_macro
+    txt += `
+<xacro:${macro.name}
+  name="${tgt.frame_id}"
+  parent="${parent.frame_id}"
+  namespace=""
+  x="\${calibration['${parent.frame_id}']['${tgt.frame_id}']['x']}"
+  y="\${calibration['${parent.frame_id}']['${tgt.frame_id}']['y']}"
+  z="\${calibration['${parent.frame_id}']['${tgt.frame_id}']['z']}"
+  roll="\${calibration['${parent.frame_id}']['${tgt.frame_id}']['roll']}"
+  pitch="\${calibration['${parent.frame_id}']['${tgt.frame_id}']['pitch']}"
+  yaw="\${calibration['${parent.frame_id}']['${tgt.frame_id}']['yaw']}"
+  fps="30"
+  width="800"
+  height="400"
+  fov="1.3"
+  />`;
+  } else if (macro.type === 3) { //imu_macro
+    txt += `
+<xacro:${macro.name}
+  name="${tgt.frame_id}"
+  parent="${parent.frame_id}"
+  namespace=""
+  x="\${calibration['${parent.frame_id}']['${tgt.frame_id}']['x']}"
+  y="\${calibration['${parent.frame_id}']['${tgt.frame_id}']['y']}"
+  z="\${calibration['${parent.frame_id}']['${tgt.frame_id}']['z']}"
+  roll="\${calibration['${parent.frame_id}']['${tgt.frame_id}']['roll']}"
+  pitch="\${calibration['${parent.frame_id}']['${tgt.frame_id}']['pitch']}"
+  yaw="\${calibration['${parent.frame_id}']['${tgt.frame_id}']['yaw']}"
+  fps="100"
+/>`;
+  }
   return txt;
 }
