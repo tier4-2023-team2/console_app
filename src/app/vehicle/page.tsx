@@ -29,7 +29,7 @@ export default function Page() {
     init();
   }, [])
   return (<>
-    <div className="flex flex-row w-full h-full gap-4">
+    <div className="flex flex-row w-full max-h-full gap-4">
       <div className="sm:basis-1/3 w-96 h-full min-w-[400px] ">
         <Card sx={{ p: 4, mt: 2, ml: 2 }}>
           <TableContainer className='h-[620px]' component={Paper}>

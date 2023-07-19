@@ -17,7 +17,7 @@ const text_field_width = 500;
 
 const Config = ({ config, title, value_key, prefix, setter }) => {
   return (<>
-    <div className="w-full">
+    <div className="w-full h-full">
       <label htmlFor="workspace" className="block text-md font-medium leading-6 text-gray-900">
         {title}
       </label>
@@ -88,9 +88,9 @@ export default function Page() {
 
 
   return (<>
-    <div className="flex flex-row w-full gap-4 pl-4">
-      <div className="w-full w-256 max-w-[800px] ">
-        <Card sx={{ p: 4, mt: 2 }}>
+    <div className="flex h-full flex-row w-full gap-4 pl-4">
+      <div className="w-full w-256 max-w-[800px]">
+        <Card sx={{ p: 4, mt: 2 }} className='max-h-full'>
           <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-8 w-full">
             <Config config={config} title={"workspace"} value_key={"workspace"} prefix={"fullpath:"} setter={set_config} />
             <Config config={config} title={"vehicle_model"} value_key={"vehicle_model"} prefix={"vehicle_model:="} setter={set_config} />
